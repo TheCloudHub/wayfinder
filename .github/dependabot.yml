@@ -1,22 +1,11 @@
+# Security-only Dependabot.
+#
+# Scheduled version-update PRs are intentionally disabled to keep noise low.
+# Dependabot **security updates** remain enabled at the repository level and will
+# open PRs only when a dependency has a known vulnerability
+# (Settings > Code security > Dependabot security updates).
+#
+# To re-enable routine version bumps later, add `updates:` entries here (see
+# https://docs.github.com/code-security/dependabot/dependabot-version-updates).
 version: 2
-updates:
-  - package-ecosystem: pip
-    directory: "/"
-    schedule:
-      interval: weekly
-    open-pull-requests-limit: 5
-
-  - package-ecosystem: github-actions
-    directory: "/"
-    schedule:
-      interval: weekly
-
-  - package-ecosystem: terraform
-    directory: "/deploy/lambda"
-    schedule:
-      interval: weekly
-
-  - package-ecosystem: docker
-    directory: "/deploy/lambda"
-    schedule:
-      interval: weekly
+updates: []
