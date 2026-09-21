@@ -169,7 +169,9 @@ Key settings (see [.env.example](../.env.example)): `AWS_REGION`, `AWS_PROFILE`,
 - No re-ranking; pure vector top-k. Could add a reranker or hybrid (keyword +
   vector) search.
 - Titan embeds serially — parallelize for large corpora.
-- Add evaluation harness (groundedness, answer relevance) and caching.
+- Evaluation harness ([scripts/eval.py](../scripts/eval.py)) scores retrieval
+  recall@k, groundedness, and answer relevance; run manually or via the gated
+  Eval workflow. Caching is still a future improvement.
 - Optional: live MCP/CLI tool calls for real-time cloud data.
 
 See the Architecture Decision Records in [docs/adr/](adr/) for the rationale

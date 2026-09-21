@@ -1,0 +1,12 @@
+{"question": "How do I get AWS access as a new engineer?", "expected_source": "org/security-and-access.md"}
+{"question": "What is the onboarding checklist for a new developer?", "expected_source": "org/onboarding-overview.md"}
+{"question": "What are our code review and branching standards?", "expected_source": "org/engineering-standards.md"}
+{"question": "How should I request access and handle secrets securely?", "expected_source": "org/security-and-access.md"}
+{"question": "What are the guidelines for using Azure in our org?", "expected_source": "azure/azure-usage.md"}
+{"question": "How do we use GCP projects and IAM?", "expected_source": "gcp/gcp-usage.md"}
+{"question": "What are the AWS usage guidelines and account structure?", "expected_source": "aws/aws-usage.md"}
+{"question": "What FinOps cost guardrails exist for AWS spend?", "expected_source": "finops/aws-finops-guardrails.md"}
+{"question": "How do we control and tag AWS costs to avoid budget overruns?", "expected_source": "finops/aws-finops-guardrails.md"}
+{"question": "Which cloud regions are approved for deploying workloads?", "expected_source": "azure/azure-usage.md"}
+{"question": "What is our policy on tagging cloud resources?", "expected_source": "finops/aws-finops-guardrails.md"}
+{"question": "What tooling and CI conventions should engineers follow?", "expected_source": "org/engineering-standards.md"}

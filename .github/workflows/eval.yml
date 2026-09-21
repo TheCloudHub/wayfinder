@@ -1,0 +1,58 @@
+name: Eval (RAG quality)
+
+# Manual, gated RAG evaluation. Ingests the knowledge base into a local vector
+# store in-runner, then scores retrieval recall + groundedness + relevance via
+# Bedrock. Costs tokens, so it is opt-in (workflow_dispatch), not per-push.
+on:
+  workflow_dispatch:
+    inputs:
+      top_k:
+        description: "Retrieval top-k"
+        required: false
+        default: "5"
+
+permissions:
+  contents: read
+  id-token: write # AWS OIDC federation
+
+concurrency:
+  group: eval
+  cancel-in-progress: true
+
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION }}
+      VECTOR_BACKEND: local
+      BEDROCK_LLM_MODEL_ID: us.amazon.nova-2-lite-v1:0
+      BEDROCK_EMBED_MODEL_ID: amazon.titan-embed-text-v2:0
+    steps:
+      - name: Harden runner
+        uses: step-security/harden-runner@v2
+        with:
+          egress-policy: audit
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+          role-duration-seconds: 900
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run evaluation (gated)
+        run: python -m scripts.eval --top-k "${{ inputs.top_k }}" --check

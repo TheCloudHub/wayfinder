@@ -79,6 +79,17 @@ data "aws_iam_policy_document" "deploy" {
     resources = ["*"]
   }
 
+  # Bedrock invoke for the CI eval job (embeddings + LLM judge). Scoped to
+  # Amazon foundation models and this account's inference profiles.
+  statement {
+    sid     = "BedrockInvoke"
+    actions = ["bedrock:InvokeModel", "bedrock:InvokeModelWithResponseStream"]
+    resources = [
+      "arn:aws:bedrock:*::foundation-model/amazon.*",
+      "arn:aws:bedrock:*:${local.account_id}:inference-profile/*",
+    ]
+  }
+
   statement {
     sid = "EcrRepo"
     actions = [
