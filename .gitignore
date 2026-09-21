@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+data/vector_store.json
+*.log
+.DS_Store

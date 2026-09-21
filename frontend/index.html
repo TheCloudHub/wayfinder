@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Onboarding Assistant</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <div class="app">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-mark">◐</div>
+          <span>Onboarding</span>
+        </div>
+        <nav class="suggestions" id="suggestions">
+          <p class="suggestions-title">Try asking</p>
+          <button class="chip">How do I get AWS access?</button>
+          <button class="chip">What are the AWS FinOps guardrails?</button>
+          <button class="chip">How do I deploy a service on GCP?</button>
+          <button class="chip">What are our git &amp; code review standards?</button>
+          <button class="chip">Where do secrets go in Azure?</button>
+        </nav>
+        <div class="sidebar-footer">
+          <button id="clear-btn" class="ghost-btn">New chat</button>
+        </div>
+      </aside>
+
+      <main class="chat">
+        <header class="chat-header">
+          <h1>Developer Onboarding Assistant</h1>
+          <p>Org knowledge · Azure · GCP · AWS · FinOps guardrails</p>
+        </header>
+
+        <section class="messages" id="messages">
+          <div class="welcome" id="welcome">
+            <div class="welcome-mark">◐</div>
+            <h2>How can I help you get started?</h2>
+            <p>Ask about accounts, cloud usage, standards, or cost guardrails.</p>
+          </div>
+        </section>
+
+        <footer class="composer">
+          <form id="chat-form">
+            <textarea
+              id="input"
+              rows="1"
+              placeholder="Ask anything about onboarding…"
+              autocomplete="off"
+            ></textarea>
+            <button type="submit" id="send-btn" aria-label="Send">↑</button>
+          </form>
+          <p class="disclaimer">Answers come only from the ingested knowledge base.</p>
+        </footer>
+      </main>
+    </div>
+    <script src="/static/app.js"></script>
+  </body>
+</html>

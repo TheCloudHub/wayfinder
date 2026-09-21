@@ -1,0 +1,14 @@
+# Ignore everything except what the image needs.
+.venv/
+data/
+docs/
+scripts/
+*.md
+.git/
+.gitignore
+.env
+.env.example
+__pycache__/
+**/__pycache__/
+*.pyc
+.DS_Store
