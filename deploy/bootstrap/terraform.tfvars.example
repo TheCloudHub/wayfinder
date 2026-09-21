@@ -1,0 +1,7 @@
+aws_region  = "us-east-1"
+name        = "wayfinder"
+github_org  = "TheCloudHub"
+github_repo = "wayfinder"
+
+# Must be globally unique. Example:
+state_bucket_name = "wayfinder-tfstate-157539276388"

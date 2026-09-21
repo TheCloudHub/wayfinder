@@ -1,0 +1,61 @@
+name: Release (CalVer)
+
+# Cuts a CalVer release: tags YYYY.MM.MICRO and publishes a GitHub Release with
+# auto-generated notes. MICRO increments per release within the same month.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write # create tags and releases
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden runner
+        uses: step-security/harden-runner@v2
+        with:
+          egress-policy: audit
+
+      - name: Checkout (full history + tags)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Compute CalVer tag
+        id: calver
+        run: |
+          CAL="$(date -u +%Y.%m)"
+          LATEST_MICRO="$(git tag -l "${CAL}.*" \
+            | sed -E "s/^${CAL}\.//" \
+            | grep -E '^[0-9]+$' \
+            | sort -n | tail -1)"
+          if [ -z "$LATEST_MICRO" ]; then
+            MICRO=0
+          else
+            MICRO=$((LATEST_MICRO + 1))
+          fi
+          TAG="${CAL}.${MICRO}"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "Releasing $TAG"
+
+      - name: Create and push tag
+        env:
+          TAG: ${{ steps.calver.outputs.tag }}
+        run: |
+          git tag -a "$TAG" -m "Release $TAG"
+          git push origin "$TAG"
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.calver.outputs.tag }}
+        run: |
+          gh release create "$TAG" \
+            --title "$TAG" \
+            --generate-notes \
+            --target "${{ github.sha }}"
