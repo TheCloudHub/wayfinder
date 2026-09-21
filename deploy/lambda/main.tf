@@ -21,6 +21,26 @@ resource "aws_ecr_repository" "this" {
   tags = var.tags
 }
 
+# Allow the Lambda service to pull images from this repo (required for
+# container-image functions).
+resource "aws_ecr_repository_policy" "lambda_pull" {
+  repository = aws_ecr_repository.this.name
+  policy = jsonencode({
+    Version = "2008-10-17"
+    Statement = [{
+      Sid       = "LambdaECRImageRetrievalPolicy"
+      Effect    = "Allow"
+      Principal = { Service = "lambda.amazonaws.com" }
+      Action    = ["ecr:BatchGetImage", "ecr:GetDownloadUrlForLayer"]
+      Condition = {
+        StringLike = {
+          "aws:sourceArn" = "arn:aws:lambda:${local.region}:${local.account_id}:function:${var.name}*"
+        }
+      }
+    }]
+  })
+}
+
 # ── IAM role for the Lambda ──────────────────────────────────────────────────
 data "aws_iam_policy_document" "assume" {
   statement {
@@ -109,7 +129,7 @@ resource "aws_lambda_function" "this" {
     }
   }
 
-  depends_on = [aws_cloudwatch_log_group.this]
+  depends_on = [aws_cloudwatch_log_group.this, aws_ecr_repository_policy.lambda_pull]
   tags       = var.tags
 }
 

@@ -3,15 +3,13 @@ data "aws_caller_identity" "current" {}
 locals {
   account_id     = data.aws_caller_identity.current.account_id
   repo_sub       = "repo:${var.github_org}/${var.github_repo}"
-  lock_table     = "${var.name}-tf-lock"
   state_bucket   = var.state_bucket_name
   state_bucket_a = "arn:aws:s3:::${var.state_bucket_name}"
-  lock_table_a   = "arn:aws:dynamodb:${var.aws_region}:${data.aws_caller_identity.current.account_id}:table/${var.name}-tf-lock"
 }
 
 # Bootstrap provisions identity only (OIDC provider + deploy role). The Deploy
-# workflow creates the S3 state bucket and DynamoDB lock table on first run;
-# the role below is granted permission to create and use them.
+# workflow creates the S3 state bucket on first run; the role below is granted
+# permission to create and use it. State locking uses native S3 lockfiles.
 
 # ── GitHub OIDC provider + deploy role ───────────────────────────────────────
 resource "aws_iam_openid_connect_provider" "github" {
@@ -76,18 +74,6 @@ data "aws_iam_policy_document" "deploy" {
   }
 
   statement {
-    sid = "TerraformLock"
-    actions = [
-      "dynamodb:CreateTable",
-      "dynamodb:DescribeTable",
-      "dynamodb:GetItem",
-      "dynamodb:PutItem",
-      "dynamodb:DeleteItem",
-    ]
-    resources = [local.lock_table_a]
-  }
-
-  statement {
     sid       = "EcrAuth"
     actions   = ["ecr:GetAuthorizationToken"]
     resources = ["*"]
@@ -108,6 +94,9 @@ data "aws_iam_policy_document" "deploy" {
       "ecr:UploadLayerPart",
       "ecr:CompleteLayerUpload",
       "ecr:PutImage",
+      "ecr:SetRepositoryPolicy",
+      "ecr:GetRepositoryPolicy",
+      "ecr:DeleteRepositoryPolicy",
     ]
     resources = ["arn:aws:ecr:${var.aws_region}:${local.account_id}:repository/${var.name}"]
   }

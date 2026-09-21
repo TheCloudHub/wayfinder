@@ -8,11 +8,6 @@ output "tf_state_bucket" {
   value       = local.state_bucket
 }
 
-output "tf_lock_table" {
-  description = "Set repo variable TF_LOCK_TABLE to this. Created by the Deploy workflow on first run."
-  value       = local.lock_table
-}
-
 output "oidc_provider_arn" {
   description = "GitHub Actions OIDC provider ARN."
   value       = aws_iam_openid_connect_provider.github.arn
