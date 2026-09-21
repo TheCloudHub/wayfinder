@@ -103,3 +103,33 @@ jobs:
           docker run --rm -v "${{ github.workspace }}:/repo" \
             ghcr.io/gitleaks/gitleaks:v8.21.2 \
             detect --source=/repo --no-git --redact --verbose
+
+  sast:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden runner (egress audit)
+        uses: step-security/harden-runner@v2
+        with:
+          egress-policy: audit
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # GHAS-free static analysis (CodeQL code scanning needs Advanced Security,
+      # which private org repos don't have). These run as normal CI gates.
+      - name: Python SAST (bandit)
+        run: |
+          pip install --upgrade pip bandit
+          bandit -r backend scripts -ll
+
+      - name: Lint workflows (actionlint)
+        run: |
+          docker run --rm -v "${{ github.workspace }}:/repo" -w /repo \
+            rhysd/actionlint:latest -color

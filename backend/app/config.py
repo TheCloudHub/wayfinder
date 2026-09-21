@@ -36,7 +36,7 @@ class Settings(BaseSettings):
     llm_max_tokens: int = 1024
 
     # Server
-    host: str = "0.0.0.0"
+    host: str = "127.0.0.1"  # override to 0.0.0.0 in containers via HOST env
     port: int = 8000
 
     # Security: comma-separated allowed CORS origins. Empty = same-origin only

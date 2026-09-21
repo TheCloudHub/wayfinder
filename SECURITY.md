@@ -27,7 +27,8 @@ We aim to acknowledge reports within 2 business days.
 - Dependabot updates for pip, GitHub Actions, Terraform, and Docker.
 - `harden-runner` audits runner egress. Pin actions to commit SHAs for stricter
   guarantees.
-- CodeQL (`security-extended`) analyzes Python and Actions workflows.
+- SAST runs in CI without GitHub Advanced Security: `bandit` (Python) and
+  `actionlint` (workflows). Enable CodeQL if GHAS is purchased for the org.
 
 **Application**
 - Answers are grounded strictly in retrieved context (no fabricated policy).
