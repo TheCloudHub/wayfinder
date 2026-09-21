@@ -1,52 +1,17 @@
 data "aws_caller_identity" "current" {}
 
 locals {
-  account_id = data.aws_caller_identity.current.account_id
-  repo_sub   = "repo:${var.github_org}/${var.github_repo}"
+  account_id     = data.aws_caller_identity.current.account_id
+  repo_sub       = "repo:${var.github_org}/${var.github_repo}"
+  lock_table     = "${var.name}-tf-lock"
+  state_bucket   = var.state_bucket_name
+  state_bucket_a = "arn:aws:s3:::${var.state_bucket_name}"
+  lock_table_a   = "arn:aws:dynamodb:${var.aws_region}:${data.aws_caller_identity.current.account_id}:table/${var.name}-tf-lock"
 }
 
-# ── Terraform remote state ───────────────────────────────────────────────────
-resource "aws_s3_bucket" "state" {
-  bucket = var.state_bucket_name
-  tags   = var.tags
-}
-
-resource "aws_s3_bucket_versioning" "state" {
-  bucket = aws_s3_bucket.state.id
-  versioning_configuration {
-    status = "Enabled"
-  }
-}
-
-resource "aws_s3_bucket_server_side_encryption_configuration" "state" {
-  bucket = aws_s3_bucket.state.id
-  rule {
-    apply_server_side_encryption_by_default {
-      sse_algorithm = "AES256"
-    }
-  }
-}
-
-resource "aws_s3_bucket_public_access_block" "state" {
-  bucket                  = aws_s3_bucket.state.id
-  block_public_acls       = true
-  block_public_policy     = true
-  ignore_public_acls      = true
-  restrict_public_buckets = true
-}
-
-resource "aws_dynamodb_table" "lock" {
-  name         = "${var.name}-tf-lock"
-  billing_mode = "PAY_PER_REQUEST"
-  hash_key     = "LockID"
-
-  attribute {
-    name = "LockID"
-    type = "S"
-  }
-
-  tags = var.tags
-}
+# Bootstrap provisions identity only (OIDC provider + deploy role). The Deploy
+# workflow creates the S3 state bucket and DynamoDB lock table on first run;
+# the role below is granted permission to create and use them.
 
 # ── GitHub OIDC provider + deploy role ───────────────────────────────────────
 resource "aws_iam_openid_connect_provider" "github" {
@@ -92,15 +57,36 @@ resource "aws_iam_role" "deploy" {
 
 data "aws_iam_policy_document" "deploy" {
   statement {
-    sid       = "TerraformState"
-    actions   = ["s3:GetObject", "s3:PutObject", "s3:ListBucket", "s3:DeleteObject"]
-    resources = [aws_s3_bucket.state.arn, "${aws_s3_bucket.state.arn}/*"]
+    sid = "TerraformStateBucket"
+    actions = [
+      "s3:CreateBucket",
+      "s3:ListBucket",
+      "s3:GetBucketVersioning",
+      "s3:PutBucketVersioning",
+      "s3:GetEncryptionConfiguration",
+      "s3:PutEncryptionConfiguration",
+      "s3:GetBucketPublicAccessBlock",
+      "s3:PutBucketPublicAccessBlock",
+    ]
+    resources = [local.state_bucket_a]
   }
 
   statement {
-    sid       = "TerraformLock"
-    actions   = ["dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:DeleteItem"]
-    resources = [aws_dynamodb_table.lock.arn]
+    sid       = "TerraformStateObjects"
+    actions   = ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"]
+    resources = ["${local.state_bucket_a}/*"]
+  }
+
+  statement {
+    sid = "TerraformLock"
+    actions = [
+      "dynamodb:CreateTable",
+      "dynamodb:DescribeTable",
+      "dynamodb:GetItem",
+      "dynamodb:PutItem",
+      "dynamodb:DeleteItem",
+    ]
+    resources = [local.lock_table_a]
   }
 
   statement {
