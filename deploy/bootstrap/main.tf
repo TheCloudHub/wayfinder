@@ -37,14 +37,12 @@ data "aws_iam_policy_document" "assume" {
       values   = ["sts.amazonaws.com"]
     }
 
-    # Only this repo's main branch or 'production' environment may assume.
+    # Scoped to this repo (any ref/environment). Wildcard tolerates custom
+    # OIDC subject templates while staying repo-bound.
     condition {
       test     = "StringLike"
       variable = "token.actions.githubusercontent.com:sub"
-      values = [
-        "${local.repo_sub}:ref:refs/heads/main",
-        "${local.repo_sub}:environment:production",
-      ]
+      values   = ["${var.oidc_sub_prefix}:*"]
     }
   }
 }

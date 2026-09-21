@@ -22,6 +22,14 @@ variable "github_repo" {
   default     = "wayfinder"
 }
 
+# Immutable OIDC subject prefix (repo:ORG@ORGID/REPO@REPOID). The repo enforces
+# immutable subject claims, so the numeric IDs must be matched in the trust.
+variable "oidc_sub_prefix" {
+  type        = string
+  description = "Immutable OIDC subject prefix for this repo."
+  default     = "repo:TheCloudHub@82324272/wayfinder@1379486680"
+}
+
 variable "state_bucket_name" {
   type        = string
   description = "Globally-unique S3 bucket name for Terraform state."

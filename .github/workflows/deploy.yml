@@ -71,6 +71,7 @@ jobs:
               aws s3api create-bucket --bucket "$BUCKET" \
                 --create-bucket-configuration "LocationConstraint=$AWS_REGION"
             fi
+            aws s3api wait bucket-exists --bucket "$BUCKET"
           fi
           aws s3api put-bucket-versioning --bucket "$BUCKET" \
             --versioning-configuration Status=Enabled
