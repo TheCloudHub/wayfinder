@@ -1,7 +1,7 @@
 # Lean Lambda container image for the Developer Onboarding RAG API.
 # Deps exceed the Lambda zip limit, so we ship a container image (Firecracker
 # microVM under the hood). Clients are cached at module scope for warm reuse.
-FROM public.ecr.aws/lambda/python:3.12
+FROM public.ecr.aws/lambda/python:3.14
 
 # Install dependencies first for better layer caching.
 COPY requirements.txt ./
