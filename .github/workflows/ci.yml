@@ -1,0 +1,102 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Least privilege: CI only needs to read the repo.
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      # Pin third-party actions to a commit SHA in production for stricter supply-chain safety.
+      - name: Harden runner (egress audit)
+        uses: step-security/harden-runner@v2
+        with:
+          egress-policy: audit
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt ruff
+
+      - name: Lint (error-class rules)
+        run: ruff check --select E9,F,B --output-format=github .
+
+      - name: Byte-compile
+        run: python -m compileall -q backend scripts
+
+      - name: Import smoke test (Bedrock mocked)
+        run: |
+          python - <<'PY'
+          import sys
+          from unittest import mock
+          fake = mock.MagicMock()
+          fake.embed_text.side_effect = lambda t: [0.0, 1.0, 2.0]
+          fake.embed_batch.side_effect = lambda ts: [[0.0, 1.0, 2.0] for _ in ts]
+          fake.chat.side_effect = lambda s, u: "ok"
+          sys.modules["backend.app.bedrock"] = fake
+          import importlib
+          for m in ["backend.app.config", "backend.app.vectorstore",
+                    "backend.app.ingest", "backend.app.rag",
+                    "backend.app.main", "backend.app.lambda_handler"]:
+              importlib.import_module(m)
+          print("imports OK")
+          PY
+
+  terraform:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden runner (egress audit)
+        uses: step-security/harden-runner@v2
+        with:
+          egress-policy: audit
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Format check
+        run: terraform fmt -check -recursive deploy/
+
+      - name: Validate
+        working-directory: deploy/lambda
+        run: |
+          terraform init -backend=false
+          terraform validate
+
+  secrets:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Scan for secrets (gitleaks)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

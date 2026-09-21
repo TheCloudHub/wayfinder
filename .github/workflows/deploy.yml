@@ -1,0 +1,78 @@
+name: Deploy (Lambda)
+
+# Manual, gated deploy. Uses GitHub OIDC to assume an AWS role — no long-lived
+# AWS keys are stored in the repo.
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: "Container image tag to build and deploy"
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+  id-token: write # required for AWS OIDC federation
+
+concurrency:
+  group: deploy-lambda
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    # Requires an environment reviewer to approve before AWS is touched.
+    environment: production
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION }}
+      TF_VAR_aws_region: ${{ vars.AWS_REGION }}
+    steps:
+      - name: Harden runner
+        uses: step-security/harden-runner@v2
+        with:
+          egress-policy: audit
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+          # Short-lived credentials only.
+          role-duration-seconds: 900
+
+      - name: Login to Amazon ECR
+        id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Resolve image tag
+        id: tag
+        run: echo "tag=${{ inputs.image_tag || github.sha }}" >> "$GITHUB_OUTPUT"
+
+      - name: Build and push image
+        env:
+          REGISTRY: ${{ steps.ecr.outputs.registry }}
+          REPO: ${{ vars.ECR_REPOSITORY }}
+          TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          IMAGE="$REGISTRY/$REPO:$TAG"
+          docker build -f deploy/lambda/Dockerfile -t "$IMAGE" .
+          docker push "$IMAGE"
+          echo "IMAGE_URI=$IMAGE" >> "$GITHUB_ENV"
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform apply
+        working-directory: deploy/lambda
+        env:
+          TF_VAR_image_uri: ${{ env.IMAGE_URI }}
+        run: |
+          terraform init
+          terraform apply -auto-approve \
+            -var "name=${{ vars.APP_NAME }}" \
+            -var "s3_vector_bucket=${{ vars.S3_VECTOR_BUCKET }}"

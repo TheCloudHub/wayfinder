@@ -15,12 +15,15 @@ from .rag import answer
 
 app = FastAPI(title="Developer Onboarding RAG", version="1.0.0")
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# CORS is opt-in and restrictive by default. The chat UI is served same-origin,
+# so no cross-origin access is granted unless CORS_ALLOW_ORIGINS is configured.
+if settings.cors_origins_list:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.cors_origins_list,
+        allow_methods=["GET", "POST"],
+        allow_headers=["Content-Type"],
+    )
 
 FRONTEND_DIR = ROOT_DIR / "frontend"
 

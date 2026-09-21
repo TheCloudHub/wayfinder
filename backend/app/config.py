@@ -39,6 +39,14 @@ class Settings(BaseSettings):
     host: str = "0.0.0.0"
     port: int = 8000
 
+    # Security: comma-separated allowed CORS origins. Empty = same-origin only
+    # (the UI is served by this app, so no cross-origin access is needed).
+    cors_allow_origins: str = ""
+
+    @property
+    def cors_origins_list(self) -> list[str]:
+        return [o.strip() for o in self.cors_allow_origins.split(",") if o.strip()]
+
     @property
     def local_store_abspath(self) -> Path:
         p = Path(self.local_store_path)

@@ -1,0 +1,15 @@
+aws_region             = "us-east-1"
+name                   = "wayfinder"
+s3_vector_bucket       = "wayfinder-rag"
+s3_vector_index        = "knowledge-base"
+bedrock_llm_model_id   = "us.amazon.nova-2-lite-v1:0"
+bedrock_embed_model_id = "amazon.titan-embed-text-v2:0"
+
+# Set after building/pushing the image (CD pipeline injects this via -var):
+# image_uri = "<account>.dkr.ecr.us-east-1.amazonaws.com/wayfinder:<tag>"
+
+# Keep 0 for lowest cost; set >0 to eliminate cold starts.
+provisioned_concurrency = 0
+
+# AWS_IAM = signed requests only. Set to "NONE" to expose a PUBLIC URL.
+function_url_auth_type = "AWS_IAM"
