@@ -96,7 +96,10 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
+      # Use the gitleaks binary directly (Apache-2.0, no license) instead of the
+      # gitleaks-action, which now requires a paid license for organizations.
       - name: Scan for secrets (gitleaks)
-        uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          docker run --rm -v "${{ github.workspace }}:/repo" \
+            ghcr.io/gitleaks/gitleaks:v8.21.2 \
+            detect --source=/repo --no-git --redact --verbose

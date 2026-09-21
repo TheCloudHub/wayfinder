@@ -61,7 +61,7 @@ class LocalVectorStore:
 
     def upsert(self, chunks: list[Chunk], embeddings: list[list[float]]) -> None:
         self.ensure_ready()
-        for chunk, vector in zip(chunks, embeddings):
+        for chunk, vector in zip(chunks, embeddings, strict=False):
             self._records.append(
                 {
                     "id": chunk.id,
@@ -83,7 +83,7 @@ class LocalVectorStore:
 
 
 def _cosine(a: list[float], b: list[float]) -> float:
-    dot = sum(x * y for x, y in zip(a, b))
+    dot = sum(x * y for x, y in zip(a, b, strict=False))
     na = math.sqrt(sum(x * x for x in a))
     nb = math.sqrt(sum(y * y for y in b))
     if na == 0 or nb == 0:
@@ -130,7 +130,7 @@ class S3VectorsStore:
                 "data": {"float32": [float(x) for x in vector]},
                 "metadata": {**chunk.metadata, "text": chunk.text},
             }
-            for chunk, vector in zip(chunks, embeddings)
+            for chunk, vector in zip(chunks, embeddings, strict=False)
         ]
         # S3 Vectors accepts up to 500 vectors per PutVectors call.
         for i in range(0, len(vectors), 500):

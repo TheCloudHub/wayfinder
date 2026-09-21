@@ -1,8 +1,6 @@
 """FastAPI application: REST API + static chat UI."""
 from __future__ import annotations
 
-from pathlib import Path
-
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
