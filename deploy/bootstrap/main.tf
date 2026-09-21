@@ -167,6 +167,7 @@ data "aws_iam_policy_document" "deploy" {
     sid = "Logs"
     actions = [
       "logs:CreateLogGroup",
+      "logs:DeleteLogGroup",
       "logs:PutRetentionPolicy",
       "logs:TagResource",
       "logs:ListTagsForResource",
