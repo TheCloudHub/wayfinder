@@ -158,10 +158,15 @@ data "aws_iam_policy_document" "deploy" {
   }
 
   statement {
+    sid       = "LogsDescribe"
+    actions   = ["logs:DescribeLogGroups"]
+    resources = ["*"] # DescribeLogGroups does not support resource scoping
+  }
+
+  statement {
     sid = "Logs"
     actions = [
       "logs:CreateLogGroup",
-      "logs:DescribeLogGroups",
       "logs:PutRetentionPolicy",
       "logs:TagResource",
       "logs:ListTagsForResource",
