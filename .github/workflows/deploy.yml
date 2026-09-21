@@ -65,7 +65,7 @@ jobs:
           echo "IMAGE_URI=$IMAGE" >> "$GITHUB_ENV"
 
       - name: Set up Terraform
-        uses: hashicorp/setup-terraform@v3
+        uses: hashicorp/setup-terraform@v4
 
       - name: Terraform apply
         working-directory: deploy/lambda
